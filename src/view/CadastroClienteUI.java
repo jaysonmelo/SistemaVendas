@@ -2,8 +2,10 @@ package view;
 
 import java.awt.EventQueue;
 
+import javax.swing.JFormattedTextField;
 import javax.swing.JInternalFrame;
 import javax.swing.GroupLayout;
+import javax.swing.JOptionPane;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
@@ -12,9 +14,18 @@ import javax.swing.JTextField;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JButton;
 
+import util.MaskFields;
+import dao.ClienteDAO;
+import model.Cliente;
+
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import java.text.ParseException;
+
 public class CadastroClienteUI extends JInternalFrame {
 	private JTextField jtfNomeCliente;
-	private JTextField jtfCpfCliente;
+	private JFormattedTextField jtfCpfCliente;
+	private MaskFields maskFields = new MaskFields();
 
 	/**
 	 * Launch the application.
@@ -23,7 +34,7 @@ public class CadastroClienteUI extends JInternalFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					CadastroClienteUI frame = new CadastroClienteUI();
+					CadastroClienteUI frame = new CadastroClienteUI(null);
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -35,7 +46,7 @@ public class CadastroClienteUI extends JInternalFrame {
 	/**
 	 * Create the frame.
 	 */
-	public CadastroClienteUI() {
+	public CadastroClienteUI(Cliente cliente) {
 		setResizable(true);
 		setClosable(true);
 		setTitle("Cadastro de Cliente");
@@ -45,8 +56,29 @@ public class CadastroClienteUI extends JInternalFrame {
 		jpCadastroCliente.setBorder(new TitledBorder(null, "Cliente", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		
 		JButton jbSalvar = new JButton("Salvar");
+		jbSalvar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if ( cliente == null ){ //cliente null INSERE
+					Cliente c = new Cliente();
+					c.setNome(jtfNomeCliente.getText());
+					c.setCpf(jtfCpfCliente.getText());
+					new ClienteDAO().inserir(c);
+					JOptionPane.showMessageDialog(null, "Cliente cadastrado com sucesso!");
+				} else { //cliente não null EDITA
+					cliente.setNome(jtfNomeCliente.getText());
+					cliente.setCpf(jtfCpfCliente.getText());
+					new ClienteDAO().editar(cliente);
+					JOptionPane.showMessageDialog(null, "Cliente alterado com sucesso!");
+				}
+			}
+		});
 		
 		JButton jbCancelar = new JButton("Cancelar");
+		jbCancelar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				dispose();
+			}
+		});
 		GroupLayout groupLayout = new GroupLayout(getContentPane());
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
@@ -78,7 +110,13 @@ public class CadastroClienteUI extends JInternalFrame {
 		jtfNomeCliente = new JTextField();
 		jtfNomeCliente.setColumns(10);
 		
-		jtfCpfCliente = new JTextField();
+		jtfCpfCliente = new JFormattedTextField();
+		try {
+			maskFields.maskCpf(jtfCpfCliente);
+		} catch (ParseException e1) {
+			JOptionPane.showMessageDialog(null, "Impossível aplicar máscara");
+			e1.printStackTrace();
+		}
 		jtfCpfCliente.setColumns(10);
 		GroupLayout gl_jpCadastroCliente = new GroupLayout(jpCadastroCliente);
 		gl_jpCadastroCliente.setHorizontalGroup(
@@ -111,6 +149,10 @@ public class CadastroClienteUI extends JInternalFrame {
 		);
 		jpCadastroCliente.setLayout(gl_jpCadastroCliente);
 		getContentPane().setLayout(groupLayout);
-
+		
+		if ( cliente != null){
+			jtfNomeCliente.setText(cliente.getNome());
+			jtfCpfCliente.setText(cliente.getCpf());
+		}
 	}
 }

@@ -4,6 +4,7 @@ import java.awt.EventQueue;
 
 import javax.swing.JInternalFrame;
 import javax.swing.GroupLayout;
+import javax.swing.JOptionPane;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
@@ -11,6 +12,12 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JButton;
+
+import dao.ProdutoDAO;
+import model.Produto;
+
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class CadastroProdutoUI extends JInternalFrame {
 	private final JPanel jpCadastroProdutos = new JPanel();
@@ -38,12 +45,27 @@ public class CadastroProdutoUI extends JInternalFrame {
 	 * Create the frame.
 	 */
 	public CadastroProdutoUI() {
+		setClosable(true);
 		setTitle("Cadastro de Produtos");
 		setBounds(100, 100, 450, 205);
 		
 		JButton jbSalvar = new JButton("Salvar");
+		jbSalvar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				Produto p = new Produto();
+				p.setDescricao(jtfDescricaoProduto.getText());
+				p.setPreco(Double.parseDouble(jtfPrecoProduto.getText()));
+				ProdutoDAO.obterInstancia().getListaProdutos().add(p);
+				JOptionPane.showMessageDialog(null, "Produto cadastrado com sucesso!");
+			}
+		});
 		
 		JButton jbCancelar = new JButton("Cancelar");
+		jbCancelar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				dispose();
+			}
+		});
 		GroupLayout groupLayout = new GroupLayout(getContentPane());
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.TRAILING)

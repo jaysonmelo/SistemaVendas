@@ -20,6 +20,15 @@ public class PrincipalUI extends JFrame {
 
 	private JPanel contentPane;
 
+	private static PrincipalUI instancia;
+	
+	public static PrincipalUI obterInstancia(){
+		if (instancia == null){
+			instancia = new PrincipalUI();
+		}
+		return instancia;
+	}
+	
 	/**
 	 * Launch the application.
 	 */
@@ -27,7 +36,7 @@ public class PrincipalUI extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					PrincipalUI frame = new PrincipalUI();
+					PrincipalUI frame = obterInstancia();
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -53,7 +62,7 @@ public class PrincipalUI extends JFrame {
 		JMenuItem jmiCadastroClientes = new JMenuItem("Clientes");
 		jmiCadastroClientes.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				CadastroClienteUI cadClienteUI = new CadastroClienteUI();
+				CadastroClienteUI cadClienteUI = new CadastroClienteUI(null);
 				cadClienteUI.setFocusable(true);
 				cadClienteUI.requestFocus();
 				contentPane.add(cadClienteUI, 0);

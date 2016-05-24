@@ -3,7 +3,9 @@ package view;
 import java.awt.EventQueue;
 
 import javax.swing.JInternalFrame;
+
 import java.awt.FlowLayout;
+
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JPanel;
@@ -15,6 +17,17 @@ import javax.swing.JButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
+
+import dao.ClienteDAO;
+import dao.ProdutoDAO;
+import model.Cliente;
+import model.ClienteTableModel;
+import model.Produto;
+import model.ProdutoTableModel;
+
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import java.util.ArrayList;
 
 public class ConsultaProdutosUI extends JInternalFrame {
 	private JTextField jtfPesquisa;
@@ -40,6 +53,7 @@ public class ConsultaProdutosUI extends JInternalFrame {
 	 * Create the frame.
 	 */
 	public ConsultaProdutosUI() {
+		setClosable(true);
 		setTitle("Consulta de Produtos");
 		setBounds(100, 100, 450, 357);
 		
@@ -55,6 +69,11 @@ public class ConsultaProdutosUI extends JInternalFrame {
 		JButton jbAtualizar = new JButton("Atualizar");
 		
 		JButton jbCancelar = new JButton("Cancelar");
+		jbCancelar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				dispose();
+			}
+		});
 		GroupLayout groupLayout = new GroupLayout(getContentPane());
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
@@ -95,6 +114,17 @@ public class ConsultaProdutosUI extends JInternalFrame {
 		jtfPesquisa.setColumns(10);
 		
 		JButton jbBuscar = new JButton("Buscar");
+		jbBuscar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				ArrayList<Produto> listaProdutoPesquisa = new ArrayList<Produto>();
+				for ( Produto p : ProdutoDAO.obterInstancia().getListaProdutos() ){
+					if (p.getDescricao().contains(jtfPesquisa.getText())){
+						listaProdutoPesquisa.add(p);
+					}
+				}
+				jtListaProdutos.setModel(new ProdutoTableModel(listaProdutoPesquisa));
+			}
+		});
 		
 		JScrollPane jspListaProdutos = new JScrollPane();
 		GroupLayout gl_jpConsultaProdutos = new GroupLayout(jpConsultaProdutos);
@@ -126,21 +156,9 @@ public class ConsultaProdutosUI extends JInternalFrame {
 		);
 		
 		jtListaProdutos = new JTable();
-		jtListaProdutos.setModel(new DefaultTableModel(
-			new Object[][] {
-				{null, null, null},
-				{null, null, null},
-				{null, null, null},
-				{null, null, null},
-				{null, null, null},
-				{null, null, null},
-				{null, null, null},
-				{null, null, null},
-			},
-			new String[] {
-				"ID", "Descri\u00E7\u00E3o", "Pre\u00E7o(R$)"
-			}
-		));
+		jtListaProdutos.setModel(
+				new ProdutoTableModel(
+						ProdutoDAO.obterInstancia().getListaProdutos()));
 		jspListaProdutos.setViewportView(jtListaProdutos);
 		jpConsultaProdutos.setLayout(gl_jpConsultaProdutos);
 		getContentPane().setLayout(groupLayout);

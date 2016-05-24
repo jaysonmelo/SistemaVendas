@@ -4,6 +4,7 @@ import java.awt.EventQueue;
 
 import javax.swing.JInternalFrame;
 import javax.swing.GroupLayout;
+import javax.swing.JOptionPane;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
@@ -14,6 +15,14 @@ import javax.swing.JButton;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
+
+import dao.ClienteDAO;
+import model.Cliente;
+import model.ClienteTableModel;
+
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import java.util.ArrayList;
 
 public class ConsultaClienteUI extends JInternalFrame {
 	private JTable jtListaClientes;
@@ -39,6 +48,7 @@ public class ConsultaClienteUI extends JInternalFrame {
 	 * Create the frame.
 	 */
 	public ConsultaClienteUI() {
+		setClosable(true);
 		setTitle("Consulta de Clientes");
 		setBounds(100, 100, 450, 326);
 		
@@ -46,14 +56,61 @@ public class ConsultaClienteUI extends JInternalFrame {
 		jpConsultaCliente.setBorder(new TitledBorder(null, "Clientes", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		
 		JButton jbEditar = new JButton("Editar");
+		jbEditar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				Cliente c = 
+						new ClienteTableModel(
+								new ClienteDAO().getListaClientes()
+							).get(jtListaClientes.getSelectedRow());
+				CadastroClienteUI cadClienteUi = new CadastroClienteUI(c);
+				cadClienteUi.setFocusable(true);
+				cadClienteUi.requestFocus();
+				PrincipalUI.obterInstancia().getContentPane().add(cadClienteUi,0);
+				cadClienteUi.setVisible(true);
+			}
+		});
 		
 		JButton jbExcluir = new JButton("Excluir");
+		jbExcluir.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				Cliente c = 
+						new ClienteTableModel(
+								new ClienteDAO().getListaClientes()
+							).get(jtListaClientes.getSelectedRow());
+				new ClienteDAO().excluir(c.getId());
+				JOptionPane.showMessageDialog(null, "Cliente excluído com sucesso");
+				jtListaClientes.setModel(
+						new ClienteTableModel(
+								new ClienteDAO().getListaClientes()));
+			}
+		});
 		
 		JButton jbInserir = new JButton("Inserir");
+		jbInserir.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				CadastroClienteUI cadClienteUi = new CadastroClienteUI(null);
+				cadClienteUi.setFocusable(true);
+				cadClienteUi.requestFocus();
+				PrincipalUI.obterInstancia().getContentPane().add(cadClienteUi,0);
+				cadClienteUi.setVisible(true);
+			}
+		});
 		
 		JButton jbCancelar = new JButton("Cancelar");
+		jbCancelar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				dispose();
+			}
+		});
 		
 		JButton jbAtualizar = new JButton("Atualizar");
+		jbAtualizar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				jtListaClientes.setModel(
+						new ClienteTableModel(
+								new ClienteDAO().getListaClientes()));
+			}
+		});
 		GroupLayout groupLayout = new GroupLayout(getContentPane());
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
@@ -96,6 +153,18 @@ public class ConsultaClienteUI extends JInternalFrame {
 		jtfPesquisa.setColumns(10);
 		
 		JButton jbBuscar = new JButton("Buscar");
+		jbBuscar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				ArrayList<Cliente> listaClientePesquisa = new ArrayList<Cliente>();
+				for ( Cliente c : new ClienteDAO().
+						getListaClientesByNome(jtfPesquisa.getText()) ){
+//					
+						listaClientePesquisa.add(c);
+//					
+				}
+				jtListaClientes.setModel(new ClienteTableModel(listaClientePesquisa));
+			}
+		});
 		GroupLayout gl_jpConsultaCliente = new GroupLayout(jpConsultaCliente);
 		gl_jpConsultaCliente.setHorizontalGroup(
 			gl_jpConsultaCliente.createParallelGroup(Alignment.LEADING)
@@ -125,19 +194,9 @@ public class ConsultaClienteUI extends JInternalFrame {
 		);
 		
 		jtListaClientes = new JTable();
-		jtListaClientes.setModel(new DefaultTableModel(
-			new Object[][] {
-				{null, null, null},
-				{null, null, null},
-				{null, null, null},
-				{null, null, null},
-				{null, null, null},
-				{null, null, null},
-			},
-			new String[] {
-				"ID", "Nome", "CPF"
-			}
-		));
+		jtListaClientes.setModel(
+				new ClienteTableModel(
+						new ClienteDAO().getListaClientes()));
 		jspListaClientes.setViewportView(jtListaClientes);
 		jpConsultaCliente.setLayout(gl_jpConsultaCliente);
 		getContentPane().setLayout(groupLayout);

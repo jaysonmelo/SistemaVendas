@@ -7,20 +7,48 @@ import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JComboBox;
 import javax.swing.JButton;
+import javax.swing.JFormattedTextField;
+import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
+import util.MaskFields;
+import dao.ClienteDAO;
+import dao.ProdutoDAO;
+import dao.VendaDAO;
+import model.Cliente;
+import model.ItemVenda;
+import model.ItemVendaTableModel;
+import model.Produto;
+import model.Venda;
+
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import java.text.DecimalFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+
 public class RegistrarVendaUI extends JInternalFrame {
 	private JTextField jtfCodigo;
-	private JTextField jtfDataVenda;
-	private JTextField jtfQtde;
+	private JFormattedTextField jtfDataVenda;
+	private JFormattedTextField jtfQtde;
 	private JTable jtItensVenda;
+	private ArrayList<ItemVenda> listaItemVendaTemp = new ArrayList<ItemVenda>();
+	private Double soma = 0.0; 
+	private JLabel jlValorTotalVenda;
+	private DecimalFormat formatValor = new DecimalFormat("0.00");
+	private SimpleDateFormat formatData = new SimpleDateFormat("dd/MM/yyyy");
+	private JComboBox jcbListaClientes;
+	private JComboBox jcbListaProdutos;
+	private MaskFields maskFields = new MaskFields();
 
 	/**
 	 * Launch the application.
@@ -42,15 +70,34 @@ public class RegistrarVendaUI extends JInternalFrame {
 	 * Create the frame.
 	 */
 	public RegistrarVendaUI() {
+		setClosable(true);
 		setTitle("Registro de Vendas");
-		setBounds(100, 100, 574, 362);
+		setBounds(100, 100, 615, 408);
 		
 		JPanel jpRegistroVendas = new JPanel();
 		jpRegistroVendas.setBorder(new TitledBorder(null, "Registro de Vendas", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		
 		JButton jbRegistrarVenda = new JButton("Registrar Venda");
+		jbRegistrarVenda.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				Venda venda = new Venda();
+				venda.setCliente((Cliente)jcbListaClientes.getSelectedItem());
+				try {
+					venda.setDataVenda(formatData.parse(jtfDataVenda.getText()));
+				} catch (ParseException e1) {
+					e1.printStackTrace();
+				}
+				venda.setListaItemVenda(listaItemVendaTemp);
+				VendaDAO.obterInstancia().getListaVendas().add(venda);
+			}
+		});
 		
 		JButton jbCancelar = new JButton("Cancelar");
+		jbCancelar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				dispose();
+			}
+		});
 		GroupLayout groupLayout = new GroupLayout(getContentPane());
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
@@ -66,14 +113,14 @@ public class RegistrarVendaUI extends JInternalFrame {
 		);
 		groupLayout.setVerticalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
-				.addGroup(groupLayout.createSequentialGroup()
+				.addGroup(Alignment.TRAILING, groupLayout.createSequentialGroup()
 					.addContainerGap()
-					.addComponent(jpRegistroVendas, GroupLayout.PREFERRED_SIZE, 285, GroupLayout.PREFERRED_SIZE)
-					.addPreferredGap(ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-					.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
-						.addComponent(jbRegistrarVenda)
-						.addComponent(jbCancelar))
-					.addContainerGap())
+					.addComponent(jpRegistroVendas, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+					.addPreferredGap(ComponentPlacement.RELATED)
+					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+						.addComponent(jbCancelar)
+						.addComponent(jbRegistrarVenda))
+					.addGap(19))
 		);
 		
 		JLabel jlCodigo = new JLabel("Código:");
@@ -83,12 +130,26 @@ public class RegistrarVendaUI extends JInternalFrame {
 		
 		JLabel jlDataVenda = new JLabel("Data da Venda:");
 		
-		jtfDataVenda = new JTextField();
+		jtfDataVenda = new JFormattedTextField();
+		try {
+			maskFields.maskData(jtfDataVenda);
+		} catch (ParseException e1) {
+			JOptionPane.showMessageDialog(null, "Impossível aplicar máscara");
+			e1.printStackTrace();
+		}
 		jtfDataVenda.setColumns(10);
 		
 		JLabel lblCliente = new JLabel("Cliente:");
 		
-		JComboBox jcbListaClientes = new JComboBox();
+		DefaultComboBoxModel<Cliente> modelCliente = 
+				new DefaultComboBoxModel<Cliente>();
+		
+		for ( Cliente c : new ClienteDAO().getListaClientes()){
+			modelCliente.addElement(c);
+		}
+		
+		jcbListaClientes = new JComboBox();
+		jcbListaClientes.setModel(modelCliente);
 		
 		JPanel jpItensVenda = new JPanel();
 		jpItensVenda.setBorder(new TitledBorder(null, "Itens da Venda", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -98,7 +159,7 @@ public class RegistrarVendaUI extends JInternalFrame {
 				.addGroup(gl_jpRegistroVendas.createSequentialGroup()
 					.addContainerGap()
 					.addGroup(gl_jpRegistroVendas.createParallelGroup(Alignment.LEADING)
-						.addComponent(jpItensVenda, GroupLayout.PREFERRED_SIZE, 509, GroupLayout.PREFERRED_SIZE)
+						.addComponent(jpItensVenda, GroupLayout.DEFAULT_SIZE, 547, Short.MAX_VALUE)
 						.addGroup(gl_jpRegistroVendas.createParallelGroup(Alignment.LEADING, false)
 							.addGroup(gl_jpRegistroVendas.createSequentialGroup()
 								.addComponent(jlCodigo)
@@ -112,7 +173,7 @@ public class RegistrarVendaUI extends JInternalFrame {
 								.addComponent(lblCliente)
 								.addPreferredGap(ComponentPlacement.RELATED)
 								.addComponent(jcbListaClientes, 0, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-					.addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+					.addContainerGap())
 		);
 		gl_jpRegistroVendas.setVerticalGroup(
 			gl_jpRegistroVendas.createParallelGroup(Alignment.LEADING)
@@ -128,26 +189,61 @@ public class RegistrarVendaUI extends JInternalFrame {
 						.addComponent(lblCliente)
 						.addComponent(jcbListaClientes, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
 					.addPreferredGap(ComponentPlacement.UNRELATED)
-					.addComponent(jpItensVenda, GroupLayout.PREFERRED_SIZE, 190, GroupLayout.PREFERRED_SIZE)
-					.addContainerGap(21, Short.MAX_VALUE))
+					.addComponent(jpItensVenda, GroupLayout.DEFAULT_SIZE, 200, Short.MAX_VALUE)
+					.addContainerGap())
 		);
 		
 		JLabel jlQtde = new JLabel("Qtde:");
 		
-		jtfQtde = new JTextField();
+		jtfQtde = new JFormattedTextField();
+		try {
+			maskFields.maskInteiro(jtfQtde);
+		} catch (ParseException e1) {
+			JOptionPane.showMessageDialog(null, "Impossível aplicar máscara");
+			e1.printStackTrace();
+		}
 		jtfQtde.setColumns(10);
 		
 		JLabel lblProduto = new JLabel("Produto:");
 		
-		JComboBox jcbListaProdutos = new JComboBox();
+		DefaultComboBoxModel<Produto> modelProduto = 
+				new DefaultComboBoxModel<Produto>();
+		
+		for ( Produto p : ProdutoDAO.obterInstancia().getListaProdutos()){
+			modelProduto.addElement(p);
+		}
+		
+		jcbListaProdutos = new JComboBox();
+		jcbListaProdutos.setModel(modelProduto);
 		
 		JButton jbAdicionar = new JButton("Adicionar");
+		jbAdicionar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				ItemVenda iv = new ItemVenda();
+				iv.setQtde(Integer.parseInt(jtfQtde.getText()));
+				iv.setProduto((Produto)jcbListaProdutos.getSelectedItem());
+				iv.setValorTotalItem(iv.getQtde() * iv.getProduto().getPreco());
+				listaItemVendaTemp.add(iv);
+				jtItensVenda.setModel(new ItemVendaTableModel(listaItemVendaTemp));
+				soma += iv.getValorTotalItem();
+				jlValorTotalVenda.setText("R$ " + formatValor.format(soma));
+			}
+		});
 		
 		JScrollPane jspItensVenda = new JScrollPane();
 		
 		JButton jbRemoverItem = new JButton("Remover Item");
-		
-		JLabel jlValorTotalVenda = new JLabel("R$ 1900,00");
+		jbRemoverItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				ItemVenda iv = listaItemVendaTemp.get(jtItensVenda.getSelectedRow());
+				soma -= iv.getValorTotalItem();
+				jlValorTotalVenda.setText("R$ " + formatValor.format(soma));
+				listaItemVendaTemp.remove(jtItensVenda.getSelectedRow());
+				jtItensVenda.setModel(new ItemVendaTableModel(listaItemVendaTemp));
+			}
+		});
+
+		jlValorTotalVenda = new JLabel("R$ 0,00");
 		GroupLayout gl_jpItensVenda = new GroupLayout(jpItensVenda);
 		gl_jpItensVenda.setHorizontalGroup(
 			gl_jpItensVenda.createParallelGroup(Alignment.LEADING)
